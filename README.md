@@ -19,6 +19,12 @@ bank doctor
 Synchronisation needs the bank API. `transactions`, `export`, `status`, `connections` and `accounts` read only the local
 archive, so they work offline. Exports are your own archive, not official bank statements.
 
+## Agent skill
+
+[`skills/bank/SKILL.md`](skills/bank/SKILL.md) teaches AI coding agents (for example Claude Code) to answer questions
+about your transactions with `bank`: offline first, `--json`, never starting consent, asking before syncing. Install it
+for Claude Code with `ln -s "$PWD/skills/bank" ~/.claude/skills/bank`.
+
 ## Documentation
 
 - [Setup](docs/setup.md): Enable Banking application, keys, callback and configuration
