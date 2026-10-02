@@ -4,7 +4,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <Version>0.1.0</Version>
+    <!-- Local builds only; releases take the version from the tag. Prerelease while Activout.DatabaseClient is. -->
+    <Version>0.1.0-dev</Version>
     <Authors>Activout AB</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/activout/Activout.Banking</PackageProjectUrl>
