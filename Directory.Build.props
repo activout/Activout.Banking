@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Version>0.1.0</Version>
+    <Authors>Activout AB</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/activout/Activout.Banking</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/activout/Activout.Banking.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts</PackageOutputPath>
+    <!-- Until the transaction support in Activout.DatabaseClient is published, build against a sibling checkout. -->
+    <ActivoutDatabaseClientDir>$(MSBuildThisFileDirectory)../Activout.DatabaseClient/</ActivoutDatabaseClientDir>
+  </PropertyGroup>
+</Project>

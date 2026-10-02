@@ -1,0 +1,34 @@
+<!doctype html>
+<!--
+  Callback forwarder for the bank CLI. Host it on HTTPS, register its URL as the application's redirect URL and set
+  the same URL as redirectUrl in config.json. It forwards the bank's redirect (code and state in the query string) to
+  the bank listener on the visitor's own machine. Nothing is sent anywhere else and nothing is stored, but the web
+  server's access log sees the query string: the code is single-use and worthless without your API signing key.
+  Change PORT if you set callbackPort in config.json.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Returning to bank</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; margin: 3rem auto; max-width: 36rem; padding: 0 1rem; }
+    code { word-break: break-all; }
+  </style>
+</head>
+<body>
+  <h1>Returning to the bank command…</h1>
+  <p id="fallback" hidden>
+    If nothing happens, make sure <code>bank connect</code> is still waiting, or run
+    <code>bank connect &lt;name&gt; --manual</code> and paste this page's full address.
+  </p>
+  <script>
+    const PORT = 8765;
+    const target = "http://127.0.0.1:" + PORT + location.pathname + location.search;
+    document.getElementById("fallback").hidden = false;
+    location.replace(target);
+  </script>
+  <noscript><p>JavaScript is needed to forward to the bank command on this machine.</p></noscript>
+</body>
+</html>

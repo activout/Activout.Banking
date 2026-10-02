@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>bank</AssemblyName>
+    <RootNamespace>Activout.Banking.Cli</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>bank</ToolCommandName>
+    <PackageId>Activout.Banking.Cli</PackageId>
+    <Description>The bank command: archive and export your own bank transactions through Enable Banking.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Activout.Banking/Activout.Banking.csproj" />
+    <InternalsVisibleTo Include="Activout.Banking.Cli.Tests" />
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Activout.Banking.Cli/Activout.Banking.Cli.csproj" />
+    <Project Path="src/Activout.Banking/Activout.Banking.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Activout.Banking.Cli.Tests/Activout.Banking.Cli.Tests.csproj" />
+    <Project Path="tests/Activout.Banking.Tests/Activout.Banking.Tests.csproj" />
+  </Folder>
+</Solution>
