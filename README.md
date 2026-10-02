@@ -34,13 +34,6 @@ dotnet tool install --global --add-source ./artifacts Activout.Banking.Cli
 bank --help
 ```
 
-Until the `DapperGateway.Transaction` support in
-[Activout.DatabaseClient](https://github.com/twogood/Activout.DatabaseClient) is published, the build expects a checkout
-of that repository next to this one (`../Activout.DatabaseClient`). Override the location with
-`-p:ActivoutDatabaseClientDir=/path/to/Activout.DatabaseClient/`. The tool package bundles that build and works.
-The **library** package is not publishable yet: its nuspec would reference `Activout.DatabaseClient.Dapper` 1.0.0, which
-lacks transaction support. Switch the project reference to the released package before publishing it.
-
 ## Licence
 
 MIT. See [LICENSE](LICENSE).

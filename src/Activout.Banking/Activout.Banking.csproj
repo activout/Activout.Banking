@@ -7,12 +7,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <PackageReference Include="Activout.DatabaseClient.Dapper" Version="5.0.0-rc3" />
     <PackageReference Include="Dapper" Version="2.1.89" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.10.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(ActivoutDatabaseClientDir)Activout.DatabaseClient.Dapper/Activout.DatabaseClient.Dapper.csproj" />
     <InternalsVisibleTo Include="Activout.Banking.Tests" />
     <None Include="../../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>

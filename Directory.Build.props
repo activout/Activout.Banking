@@ -11,7 +11,5 @@
     <RepositoryUrl>https://github.com/activout/Activout.Banking.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts</PackageOutputPath>
-    <!-- Until the transaction support in Activout.DatabaseClient is published, build against a sibling checkout. -->
-    <ActivoutDatabaseClientDir>$(MSBuildThisFileDirectory)../Activout.DatabaseClient/</ActivoutDatabaseClientDir>
   </PropertyGroup>
 </Project>
