@@ -34,6 +34,12 @@ dotnet tool install --global --add-source ./artifacts Activout.Banking.Cli
 bank --help
 ```
 
+## Releasing
+
+Push a tag such as `v0.2.0` (or `v0.2.0-rc.1` for a prerelease). The Publish workflow tests and packs with that
+version, attests build provenance, pushes both packages to NuGet.org via trusted publishing and creates the GitHub
+release. Verify a package with `gh attestation verify <file>.nupkg -R activout/Activout.Banking`.
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).

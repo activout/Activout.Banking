@@ -10,6 +10,11 @@
     <PackageProjectUrl>https://github.com/activout/Activout.Banking</PackageProjectUrl>
     <RepositoryUrl>https://github.com/activout/Activout.Banking.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts</PackageOutputPath>
   </PropertyGroup>
 </Project>
