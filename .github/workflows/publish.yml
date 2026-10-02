@@ -25,18 +25,18 @@ jobs:
       - name: Restore
         run: dotnet restore
 
+      # Version from the tag, applied at build time so `bank --version` and assembly versions match the package.
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build --configuration Release --no-restore -p:Version="${GITHUB_REF_NAME#v}"
 
       - name: Test
         run: dotnet test --configuration Release --no-build
 
       - name: Pack
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
           dotnet pack \
             --configuration Release --no-build \
-            -p:PackageVersion="$VERSION" \
+            -p:Version="${GITHUB_REF_NAME#v}" \
             -o artifacts
 
       - name: Upload NuGet package artifact
