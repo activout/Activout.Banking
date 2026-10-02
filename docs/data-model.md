@@ -65,7 +65,8 @@ pending and booked items.
 - One failing account does not undo others. The run is recorded as `partial` and the command exits with code 5.
 - A lock file (`sync.lock`, held exclusively) prevents concurrent syncs. A second sync waits up to 30 seconds, then
   exits with code 6.
-- Read requests honour `Retry-After` and back off at most 4 attempts. Authorisation code exchange and other
+- Read (GET) requests are retried through Microsoft.Extensions.Http.Resilience: up to 3 retries on network errors,
+  408, 429 and 5xx, honouring `Retry-After`, otherwise exponential backoff with jitter. Authorisation code exchange and other
   state-changing requests are never retried.
 
 ## Exports

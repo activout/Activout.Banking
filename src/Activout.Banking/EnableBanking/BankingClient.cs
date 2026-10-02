@@ -3,6 +3,8 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Microsoft.Extensions.Http.Resilience;
+using Polly;
 
 namespace Activout.Banking.EnableBanking;
 
@@ -17,22 +19,42 @@ public sealed record EnableBankingOptions
 
 public sealed record TransactionQuery(DateOnly? From, DateOnly? To, bool Longest = false);
 
-/// <summary>Thin typed client for the Enable Banking account information API.</summary>
+/// <summary>
+/// Thin typed client for the Enable Banking account information API. Pass an HttpClient built on
+/// <see cref="CreateResilienceHandler"/> (as <see cref="Create"/> does) to retry transient failures of safe reads.
+/// </summary>
 public sealed class BankingClient(HttpClient http, string applicationId, RSA signingKey, TimeProvider? timeProvider = null)
 {
-    private const int MaxAttempts = 4;
-    private static readonly TimeSpan MaxRetryDelay = TimeSpan.FromSeconds(60);
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
-
-    internal TimeSpan RetryBaseDelay { get; init; } = TimeSpan.FromSeconds(1);
 
     public static BankingClient Create(EnableBankingOptions options, HttpMessageHandler? handler = null)
     {
         var key = JwtSigner.LoadPrivateKey(options.PrivateKeyPath);
-        var http = handler == null ? new HttpClient() : new HttpClient(handler);
-        http.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
-        http.Timeout = TimeSpan.FromSeconds(100);
+        var http = new HttpClient(CreateResilienceHandler(handler ?? new SocketsHttpHandler()))
+        {
+            BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/"),
+            Timeout = TimeSpan.FromSeconds(100),
+        };
         return new BankingClient(http, options.ApplicationId, key);
+    }
+
+    /// <summary>
+    /// Retries transient failures (network errors, 408, 429 and 5xx) of GET requests only, honouring Retry-After,
+    /// with exponential backoff and jitter. POST /auth and POST /sessions (single-use codes) are never retried.
+    /// </summary>
+    public static DelegatingHandler CreateResilienceHandler(HttpMessageHandler inner, TimeSpan? baseDelay = null)
+    {
+        var retry = new HttpRetryStrategyOptions
+        {
+            MaxRetryAttempts = 3,
+            BackoffType = DelayBackoffType.Exponential,
+            UseJitter = true,
+            Delay = baseDelay ?? TimeSpan.FromSeconds(1),
+            MaxDelay = TimeSpan.FromSeconds(60),
+        };
+        retry.DisableForUnsafeHttpMethods();
+        var pipeline = new ResiliencePipelineBuilder<HttpResponseMessage>().AddRetry(retry).Build();
+        return new ResilienceHandler(pipeline) { InnerHandler = inner };
     }
 
     public Task<ApplicationInfo> GetApplication(CancellationToken ct) => Get<ApplicationInfo>("application", ct);
@@ -96,38 +118,9 @@ public sealed class BankingClient(HttpClient http, string applicationId, RSA sig
 
     private async Task<T> Get<T>(string path, CancellationToken ct)
     {
-        for (var attempt = 1;; attempt++)
-        {
-            TimeSpan delay;
-            try
-            {
-                using var request = CreateRequest(HttpMethod.Get, path);
-                using var response = await http.SendAsync(request, ct);
-                if (!IsTransient(response.StatusCode) || attempt == MaxAttempts)
-                {
-                    return await Read<T>(response, ct);
-                }
-
-                delay = response.Headers.RetryAfter switch
-                {
-                    { Delta: { } delta } => delta,
-                    { Date: { } date } => date - _time.GetUtcNow(),
-                    _ => Backoff(attempt),
-                };
-            }
-            catch (HttpRequestException) when (attempt < MaxAttempts)
-            {
-                delay = Backoff(attempt);
-            }
-            catch (TaskCanceledException) when (!ct.IsCancellationRequested && attempt < MaxAttempts)
-            {
-                // HttpClient timeout.
-                delay = Backoff(attempt);
-            }
-
-            delay = delay < TimeSpan.Zero ? TimeSpan.Zero : delay > MaxRetryDelay ? MaxRetryDelay : delay;
-            await Task.Delay(delay, _time, ct);
-        }
+        using var request = CreateRequest(HttpMethod.Get, path);
+        using var response = await http.SendAsync(request, ct);
+        return await Read<T>(response, ct);
     }
 
     private async Task<T> Post<T>(string path, object body, CancellationToken ct)
@@ -167,10 +160,4 @@ public sealed class BankingClient(HttpClient http, string applicationId, RSA sig
         throw new BankingApiException(response.StatusCode, error?.Code ?? error?.Error,
             error?.Message ?? response.ReasonPhrase ?? "Request failed");
     }
-
-    private static bool IsTransient(HttpStatusCode status) =>
-        status is HttpStatusCode.TooManyRequests or HttpStatusCode.RequestTimeout or HttpStatusCode.BadGateway
-            or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout;
-
-    private TimeSpan Backoff(int attempt) => RetryBaseDelay * Math.Pow(2, attempt - 1);
 }

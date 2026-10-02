@@ -37,10 +37,8 @@ internal sealed class TestEnvironment : IDisposable
             RedirectUrl = "https://localhost:8765/callback",
             Directory = Directory,
         };
-        Client = new BankingClient(new HttpClient(Http) { BaseAddress = new Uri(Api) }, "app-id", Key, Time)
-        {
-            RetryBaseDelay = TimeSpan.Zero,
-        };
+        var handler = BankingClient.CreateResilienceHandler(Http, TimeSpan.FromMilliseconds(1));
+        Client = new BankingClient(new HttpClient(handler) { BaseAddress = new Uri(Api) }, "app-id", Key, Time);
         Archive = BankArchive.Open(Paths.DatabasePath).GetAwaiter().GetResult();
     }
 
