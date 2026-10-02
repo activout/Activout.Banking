@@ -71,16 +71,18 @@ on remote or headless machines. The URL contains the one-time code, so don't pas
 
 ## 5. Register the application
 
-Use the [control panel](https://enablebanking.com/cp/) or the official CLI (`pip install enablebanking-cli`):
+In the [control panel](https://enablebanking.com/cp/), add a new application:
 
-```sh
-enablebanking auth login you@example.com           # completes through an email link
-enablebanking app register --environment PRODUCTION --name "My bank archive" \
-  --redirect-urls https://localhost:8765/callback \
-  --description "Personal read-only transaction archive" \
-  --gdpr-email you@example.com --privacy-url https://example.com/privacy --terms-url https://example.com/terms \
-  --cert-path signing-certificate.pem
-```
+| Field | Value |
+| --- | --- |
+| Environment | Production |
+| Name | Your choice, shown to you during bank consent |
+| Allowed redirect URLs | Your `redirectUrl`, exactly (see step 4) |
+| Description | For example "Personal read-only transaction archive" |
+| Data protection email, privacy and terms URLs | Your own; production applications require them |
+| Key | Upload `signing-certificate.pem` from step 3; do not let the browser generate a key |
+
+The application ID shown afterwards goes into `config.json`.
 
 Production redirect URLs must be HTTPS. Never register a sandbox application expecting to switch it to production
 later; they are separate applications.

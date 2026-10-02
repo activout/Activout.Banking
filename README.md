@@ -43,6 +43,5 @@ MIT. See [LICENSE](LICENSE).
 Built from current upstream documentation and code (2026-10-02), not copied:
 
 - Enable Banking API reference, AIS flow and restricted production docs at enablebanking.com/docs
-- [enablebanking-cli](https://github.com/enablebanking/enablebanking-cli) at `dc7b04c18e732f7cec60f2b5a4fab5e4a51c20fd`
 - [enablebanking-api-samples](https://github.com/enablebanking/enablebanking-api-samples) at `7a16788840c42b63c305652f8ea29ab69207db25`
 - [goBankCli](https://github.com/BramVR/goBankCli) (MIT) at `d5aa11a90f5e717648626dd2d205d14c6352447c`, read for design lessons only
