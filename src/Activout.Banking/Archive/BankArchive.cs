@@ -1,3 +1,4 @@
+using System.Data;
 using System.Globalization;
 using Activout.DatabaseClient.Dapper;
 using Activout.DatabaseClient.Implementation;
@@ -9,7 +10,6 @@ namespace Activout.Banking.Archive;
 public sealed partial class BankArchive : IDisposable
 {
     private readonly SqliteConnection _connection;
-    private readonly DapperGateway _gateway;
 
     public IArchiveDao Dao { get; }
 
@@ -21,10 +21,8 @@ public sealed partial class BankArchive : IDisposable
     private BankArchive(SqliteConnection connection)
     {
         _connection = connection;
-        _gateway = new DapperGateway(connection);
         Dao = new DatabaseClientBuilder()
-            .With(new TaskConverter3Factory())
-            .With(_gateway)
+            .With(new DapperGateway(connection))
             .Build<IArchiveDao>();
     }
 
@@ -74,26 +72,18 @@ public sealed partial class BankArchive : IDisposable
 
         if (version < 1)
         {
-            await InTransaction(() => Dao.ApplySchemaV1());
+            await InTransaction(transaction => Dao.ApplySchemaV1(transaction));
         }
     }
 
     public Task<long> GetSchemaVersion() => Dao.GetSchemaVersion();
 
     /// <summary>Runs DAO calls in one SQLite transaction. Never perform network I/O inside.</summary>
-    public async Task InTransaction(Func<Task> action)
+    public async Task InTransaction(Func<IDbTransaction, Task> action)
     {
-        await using var transaction = (SqliteTransaction)await _connection.BeginTransactionAsync();
-        _gateway.Transaction = transaction;
-        try
-        {
-            await action();
-            await transaction.CommitAsync();
-        }
-        finally
-        {
-            _gateway.Transaction = null;
-        }
+        using var transaction = Dao.BeginTransaction();
+        await action(transaction);
+        transaction.Commit();
     }
 
     public void Dispose() => _connection.Dispose();

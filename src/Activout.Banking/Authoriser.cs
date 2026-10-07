@@ -1,3 +1,4 @@
+using System.Data;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Web;
@@ -125,14 +126,14 @@ public sealed class Authoriser(BankingClient client, BankArchive archive, BankCo
         var now = BankArchive.Timestamp(_time.GetUtcNow());
         long connectionId = 0;
 
-        await archive.InTransaction(async () =>
+        await archive.InTransaction(async transaction =>
         {
-            var row = await archive.Dao.GetConnection(pending.Connection);
+            var row = await archive.Dao.GetConnection(pending.Connection, transaction);
             connectionId = row?.Id ?? await archive.Dao.InsertConnection(pending.Connection, pending.Bank,
-                pending.Country, pending.PsuType, now);
+                pending.Country, pending.PsuType, now, transaction);
             await archive.Dao.UpdateConnectionSession(connectionId, session.SessionId,
-                session.Access == null ? null : BankArchive.Timestamp(session.Access.ValidUntil), now);
-            await ReconcileAccounts(connectionId, session.Accounts, now);
+                session.Access == null ? null : BankArchive.Timestamp(session.Access.ValidUntil), now, transaction);
+            await ReconcileAccounts(connectionId, session.Accounts, now, transaction);
         });
 
         var connection = (await archive.Dao.GetConnectionById(connectionId))!;
@@ -146,11 +147,12 @@ public sealed class Authoriser(BankingClient client, BankArchive archive, BankCo
     /// Provider account UIDs change with every session. Existing accounts are matched by identification hash or
     /// account identification plus currency within the connection, keeping local IDs, aliases and history.
     /// </summary>
-    internal async Task ReconcileAccounts(long connectionId, IReadOnlyList<JsonElement> received, string now)
+    internal async Task ReconcileAccounts(long connectionId, IReadOnlyList<JsonElement> received, string now,
+        IDbTransaction transaction)
     {
-        var existing = (await archive.Dao.ListAccounts(connectionId)).ToList();
+        var existing = (await archive.Dao.ListAccounts(connectionId, transaction)).ToList();
         var matched = new HashSet<long>();
-        await archive.Dao.ClearProviderUids(connectionId, now);
+        await archive.Dao.ClearProviderUids(connectionId, now, transaction);
 
         foreach (var raw in received)
         {
@@ -197,11 +199,11 @@ public sealed class Authoriser(BankingClient client, BankArchive archive, BankCo
             if (candidates.Count == 1)
             {
                 matched.Add(row.Id);
-                await archive.Dao.UpdateAccountFromProvider(row);
+                await archive.Dao.UpdateAccountFromProvider(row, transaction);
             }
             else
             {
-                matched.Add(await archive.Dao.InsertAccount(row));
+                matched.Add(await archive.Dao.InsertAccount(row, transaction));
             }
         }
     }
