@@ -1,3 +1,5 @@
+using System.Data;
+using Activout.DatabaseClient;
 using Activout.DatabaseClient.Attributes;
 
 namespace Activout.Banking.Archive;
@@ -79,13 +81,13 @@ public sealed class SyncStateRow
     public string? LastSuccessAt { get; init; }
 }
 
-public interface IArchiveDao
+public interface IArchiveDao : IWithTransactions
 {
     [SqlQuery("PRAGMA user_version")]
     Task<long> GetSchemaVersion();
 
     [SqlUpdate(Schema.V1)]
-    Task ApplySchemaV1();
+    Task ApplySchemaV1(IDbTransaction? transaction = null);
 
     // Connections
 
@@ -93,7 +95,7 @@ public interface IArchiveDao
     Task<IEnumerable<ConnectionRow>> ListConnections();
 
     [SqlQuery("SELECT * FROM connection WHERE name = @name")]
-    Task<ConnectionRow?> GetConnection(string name);
+    Task<ConnectionRow?> GetConnection(string name, IDbTransaction? transaction = null);
 
     [SqlQuery("SELECT * FROM connection WHERE id = @id")]
     Task<ConnectionRow?> GetConnectionById(long id);
@@ -102,15 +104,15 @@ public interface IArchiveDao
               INSERT INTO connection (name, aspsp_name, aspsp_country, psu_type, created_at, updated_at)
               VALUES (@name, @aspspName, @aspspCountry, @psuType, @now, @now) RETURNING id
               """)]
-    Task<long> InsertConnection(string name, string aspspName, string aspspCountry, string psuType, string now);
+    Task<long> InsertConnection(string name, string aspspName, string aspspCountry, string psuType, string now, IDbTransaction? transaction = null);
 
     [SqlUpdate("UPDATE connection SET session_id = @sessionId, valid_until = @validUntil, updated_at = @now WHERE id = @id")]
-    Task<int> UpdateConnectionSession(long id, string? sessionId, string? validUntil, string now);
+    Task<int> UpdateConnectionSession(long id, string? sessionId, string? validUntil, string now, IDbTransaction? transaction = null);
 
     // Accounts
 
     [SqlQuery("SELECT * FROM account WHERE connection_id = @connectionId ORDER BY id")]
-    Task<IEnumerable<AccountRow>> ListAccounts(long connectionId);
+    Task<IEnumerable<AccountRow>> ListAccounts(long connectionId, IDbTransaction? transaction = null);
 
     [SqlQuery("SELECT * FROM account WHERE id = @id")]
     Task<AccountRow?> GetAccount(long id);
@@ -122,7 +124,7 @@ public interface IArchiveDao
                       @OtherIdentification, @Currency, @Name, @Details, @Product, @RawJson, @CreatedAt, @UpdatedAt)
               RETURNING id
               """)]
-    Task<long> InsertAccount([BindProperties] AccountRow account);
+    Task<long> InsertAccount([BindProperties] AccountRow account, IDbTransaction? transaction = null);
 
     [SqlUpdate("""
                UPDATE account SET provider_uid = @ProviderUid, identification_hash = @IdentificationHash,
@@ -131,10 +133,10 @@ public interface IArchiveDao
                    updated_at = @UpdatedAt
                WHERE id = @Id
                """)]
-    Task<int> UpdateAccountFromProvider([BindProperties] AccountRow account);
+    Task<int> UpdateAccountFromProvider([BindProperties] AccountRow account, IDbTransaction? transaction = null);
 
     [SqlUpdate("UPDATE account SET provider_uid = NULL, updated_at = @now WHERE connection_id = @connectionId")]
-    Task<int> ClearProviderUids(long connectionId, string now);
+    Task<int> ClearProviderUids(long connectionId, string now, IDbTransaction? transaction = null);
 
     [SqlUpdate("UPDATE account SET alias = @alias, updated_at = @now WHERE id = @id")]
     Task<int> SetAlias(long id, string? alias, string now);
@@ -142,7 +144,7 @@ public interface IArchiveDao
     // Transactions
 
     [SqlQuery("SELECT * FROM bank_transaction WHERE account_id = @accountId AND identity_key = @identityKey")]
-    Task<TransactionRow?> FindTransaction(long accountId, string identityKey);
+    Task<TransactionRow?> FindTransaction(long accountId, string identityKey, IDbTransaction? transaction = null);
 
     [SqlUpdate("""
                INSERT INTO bank_transaction (account_id, identity_key, entry_reference, transaction_id, status,
@@ -152,7 +154,7 @@ public interface IArchiveDao
                    @TransactionDate, @Amount, @Currency, @Counterparty, @Description, @Reference, @RawJson,
                    @FirstSeenAt, @LastSeenAt)
                """)]
-    Task<int> InsertTransaction([BindProperties] TransactionRow transaction);
+    Task<int> InsertTransaction([BindProperties] TransactionRow row, IDbTransaction? transaction = null);
 
     [SqlUpdate("""
                UPDATE bank_transaction SET entry_reference = @EntryReference, transaction_id = @TransactionId,
@@ -162,10 +164,10 @@ public interface IArchiveDao
                    raw_json = @RawJson, last_seen_at = @LastSeenAt
                WHERE id = @Id
                """)]
-    Task<int> UpdateTransaction([BindProperties] TransactionRow transaction);
+    Task<int> UpdateTransaction([BindProperties] TransactionRow row, IDbTransaction? transaction = null);
 
     [SqlUpdate("UPDATE bank_transaction SET last_seen_at = @now WHERE id = @id")]
-    Task<int> TouchTransaction(long id, string now);
+    Task<int> TouchTransaction(long id, string now, IDbTransaction? transaction = null);
 
     [SqlQuery("""
               SELECT * FROM bank_transaction
@@ -209,7 +211,7 @@ public interface IArchiveDao
                    covered_to = excluded.covered_to, initial_complete = excluded.initial_complete,
                    last_success_at = excluded.last_success_at
                """)]
-    Task<int> SaveSyncState([BindProperties] SyncStateRow state);
+    Task<int> SaveSyncState([BindProperties] SyncStateRow state, IDbTransaction? transaction = null);
 }
 
 internal static class Schema

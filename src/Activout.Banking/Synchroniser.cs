@@ -147,14 +147,14 @@ public sealed class Synchroniser(
             : Earliest(BankArchive.ParseDate(state!.CoveredFrom), query.From);
 
         int added = 0, updated = 0;
-        await archive.InTransaction(async () =>
+        await archive.InTransaction(async transaction =>
         {
             foreach (var row in rows)
             {
-                var existing = await archive.Dao.FindTransaction(account.Id, row.IdentityKey);
+                var existing = await archive.Dao.FindTransaction(account.Id, row.IdentityKey, transaction);
                 if (existing == null)
                 {
-                    await archive.Dao.InsertTransaction(row);
+                    await archive.Dao.InsertTransaction(row, transaction);
                     added++;
                 }
                 else if (existing.RawJson != row.RawJson)
@@ -166,12 +166,12 @@ public sealed class Synchroniser(
                         TransactionDate = row.TransactionDate, Amount = row.Amount, Currency = row.Currency,
                         Counterparty = row.Counterparty, Description = row.Description, Reference = row.Reference,
                         RawJson = row.RawJson, LastSeenAt = timestamp,
-                    });
+                    }, transaction);
                     updated++;
                 }
                 else
                 {
-                    await archive.Dao.TouchTransaction(existing.Id, timestamp);
+                    await archive.Dao.TouchTransaction(existing.Id, timestamp, transaction);
                 }
             }
 
@@ -182,7 +182,7 @@ public sealed class Synchroniser(
                 CoveredTo = BankArchive.Date(today),
                 InitialComplete = true,
                 LastSuccessAt = timestamp,
-            });
+            }, transaction);
         });
 
         return new AccountSyncResult(label, true, added, updated, coveredFrom, today, null, false);
