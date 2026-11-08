@@ -62,12 +62,33 @@ internal sealed class App
             "Archive and export your own bank transactions through Enable Banking account information (read-only).")
         {
             _dataDir, _json,
-            ConnectCommand(), ConnectionsCommand(), AccountsCommand(), AccountCommand(), BalancesCommand(),
+            SetupCommand(), ConnectCommand(), ConnectionsCommand(), AccountsCommand(), AccountCommand(), BalancesCommand(),
             SyncCommand(), TransactionsCommand(), ExportCommand(), StatusCommand(), DoctorCommand(),
         };
     }
 
     // Commands
+
+    private Command SetupCommand()
+    {
+        var applicationId = new Option<string?>("--application-id") { Description = "Enable Banking application ID; asked for when missing" };
+        var noBrowser = new Option<bool>("--no-browser") { Description = "Do not open the Enable Banking control panel" };
+        var command = new Command("setup", """
+            First-time setup, step by step: creates your signing key and certificate, shows what to enter in the
+            Enable Banking control panel and saves the application ID. Safe to run again; keeps existing keys.
+            Examples:
+              bank setup
+              bank setup --application-id 00000000-0000-0000-0000-000000000000
+            """) { applicationId, noBrowser };
+        command.SetAction((p, ct) => Execute(p, async output =>
+        {
+            var result = await Setup.Run(Paths(p), p.GetValue(applicationId), !p.GetValue(noBrowser), _stdin, output,
+                OpenBrowser, ct);
+            output.Result(result, () => output.Out.WriteLine($"Configuration saved in {result.ConfigDirectory}."));
+            return ExitCodes.Success;
+        }));
+        return command;
+    }
 
     private Command ConnectCommand()
     {

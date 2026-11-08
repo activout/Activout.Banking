@@ -4,11 +4,23 @@ The `bank` command reads your own accounts through Enable Banking's account info
 Enable Banking application and authorise each bank connection with your bank's own login, for example BankID. `bank` then
 synchronises transactions into a local SQLite archive.
 
-## 1. Install
+## Quick start
 
 ```sh
-dotnet tool install --global Activout.Banking.Cli       # once published
-# or from a local build:
+bank setup
+```
+
+`bank setup` does steps 3, 5 and 6 below with you: it creates the signing key and certificate, opens the Enable
+Banking control panel, shows what to enter in each field and saves the application ID you paste. It is safe to run
+again, and keeps existing keys and settings. `bank setup --application-id <id>` skips the question. Then continue
+with step 7. The rest of this page explains each step, for manual setup or when something goes wrong.
+
+## 1. Install
+
+See the [README](../README.md) for the downloads, or install the .NET tool:
+`dotnet tool install --global Activout.Banking.Cli`. From a local build:
+
+```sh
 dotnet pack -c Release
 dotnet tool install --global --add-source ./artifacts Activout.Banking.Cli
 bank --help
@@ -32,7 +44,7 @@ database is **not encrypted**, so protect backups the same way as the signing ke
 ## 3. Signing key
 
 Enable Banking authenticates your application with an RSA key. The private key stays on your machine and only the
-certificate is registered.
+certificate is registered. `bank setup` creates both files; to create them yourself:
 
 ```sh
 cd ~/.config/activout-banking        # your configuration directory
@@ -71,7 +83,8 @@ on remote or headless machines. The URL contains the one-time code, so don't pas
 
 ## 5. Register the application
 
-In the [control panel](https://enablebanking.com/cp/), add a new application:
+In the [control panel](https://enablebanking.com/cp/), add a new application (`bank setup` shows these values with
+your own redirect URL and certificate path):
 
 | Field | Value |
 | --- | --- |
@@ -95,7 +108,7 @@ accounts, fits them.
 
 ## 6. Configure
 
-Create `config.json` in the configuration directory:
+`bank setup` writes `config.json` in the configuration directory. To write it by hand:
 
 ```json
 {

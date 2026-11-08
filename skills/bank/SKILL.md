@@ -102,4 +102,6 @@ and `error`. Never compute a balance by summing transactions; use `bank balances
 | 6 | Another sync running | Wait and retry |
 
 With `--json`, failures print `{"ok": false, "exit_code": …, "error": …}`. For setup problems, `bank doctor --json`
-checks configuration, keys, callback, archive and application status without changing anything.
+checks configuration, keys, callback, archive and application status without changing anything. If `bank` is not
+configured yet, ask the user to run `bank setup` in their own terminal: it is interactive and registers their
+Enable Banking application.
