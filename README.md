@@ -1,5 +1,7 @@
 # Activout.Banking
 
+> **Proof of concept.** This is an experiment, not a supported product. It may change or stop working without notice.
+
 Archive and export your own bank transactions using
 [Enable Banking](https://enablebanking.com/) account information (AIS). The service is read-only and never makes payments.
 
