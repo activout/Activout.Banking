@@ -1,5 +1,7 @@
 # Activout.Banking
 
+> **Proof of concept.** This is an experiment, not a supported product. It may change or stop working without notice.
+
 Archive and export your own bank transactions using
 [Enable Banking](https://enablebanking.com/) account information (AIS). The service is read-only and never makes payments.
 
@@ -19,6 +21,29 @@ bank doctor
 
 Synchronisation needs the bank API. `transactions`, `export`, `status`, `connections` and `accounts` read only the local
 archive, so they work offline. Exports are your own archive, not official bank statements.
+
+## Download
+
+Get the file for your computer from the [latest release](https://github.com/activout/Activout.Banking/releases/latest). It is a single
+program with nothing else to install. The files are not code signed yet, so your computer warns you the first time.
+
+- **Windows:** download `bank-win-x64.exe`, rename it to `bank.exe` and open PowerShell in that folder. If Windows
+  says "Windows protected your PC", click **More info**, then **Run anyway**. Type `.\bank.exe` where this README
+  says `bank`.
+- **Mac (M1 or newer):** download `bank-osx-arm64.tar.gz`, then in Terminal:
+  ```sh
+  cd ~/Downloads
+  tar -xzf bank-osx-arm64.tar.gz
+  xattr -d com.apple.quarantine bank
+  sudo mv bank /usr/local/bin/
+  ```
+- **Linux:** download `bank-linux-x64.tar.gz`, run `tar -xzf bank-linux-x64.tar.gz` and move `bank` to a folder on
+  your `PATH`.
+
+Check a download against the release's `SHA256SUMS`, or verify its build provenance with
+`gh attestation verify <file> -R activout/Activout.Banking`.
+
+With .NET 10 installed you can use the .NET tool instead: `dotnet tool install -g Activout.Banking.Cli`.
 
 ## Agent skill
 
@@ -45,7 +70,7 @@ bank --help
 
 Push a tag such as `v0.2.0` (or `v0.2.0-rc.1` for a prerelease). The Publish workflow tests and packs with that
 version, attests build provenance, pushes both packages to NuGet.org via trusted publishing and creates the GitHub
-release. Verify a package with `gh attestation verify <file>.nupkg -R activout/Activout.Banking`.
+release with self-contained `bank` executables for Windows, macOS and Linux. Verify a package with `gh attestation verify <file>.nupkg -R activout/Activout.Banking`.
 
 ## Licence
 
