@@ -32,22 +32,22 @@ public sealed record BankConfig
 
     [JsonIgnore] public string Directory { get; init; } = "";
 
-    public string ResolvedPrivateKeyPath => Path.GetFullPath(PrivateKeyPath, Directory);
+    [JsonIgnore] public string ResolvedPrivateKeyPath => Path.GetFullPath(PrivateKeyPath, Directory);
 
-    public Uri RedirectUri => Uri.TryCreate(RedirectUrl, UriKind.Absolute, out var uri)
+    [JsonIgnore] public Uri RedirectUri => Uri.TryCreate(RedirectUrl, UriKind.Absolute, out var uri)
         ? uri
         : throw new BankingConfigurationException($"redirectUrl '{RedirectUrl}' is not an absolute URL");
 
     /// <summary>The redirect itself targets this machine, so the listener must speak its scheme.</summary>
-    public bool RedirectIsLoopback => RedirectUri.IsLoopback;
+    [JsonIgnore] public bool RedirectIsLoopback => RedirectUri.IsLoopback;
 
-    public int ResolvedCallbackPort => CallbackPort ?? (RedirectIsLoopback ? RedirectUri.Port : DefaultCallbackPort);
+    [JsonIgnore] public int ResolvedCallbackPort => CallbackPort ?? (RedirectIsLoopback ? RedirectUri.Port : DefaultCallbackPort);
 
     /// <summary>
     /// URL the local listener answers on: the redirect itself when it is loopback, otherwise plain HTTP on
     /// 127.0.0.1 with the same path, which a hosted forwarder page targets.
     /// </summary>
-    public Uri LocalCallbackUri => RedirectIsLoopback
+    [JsonIgnore] public Uri LocalCallbackUri => RedirectIsLoopback
         ? RedirectUri
         : new UriBuilder("http", "127.0.0.1", ResolvedCallbackPort, RedirectUri.AbsolutePath).Uri;
 
@@ -62,12 +62,23 @@ public sealed record BankConfig
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
+    private static readonly JsonSerializerOptions SaveOptions =
+        new(JsonOptions) { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
+
+    /// <summary>Writes config.json to <see cref="Directory"/>, readable only by the owner where supported.</summary>
+    public void Save()
+    {
+        var path = Path.Combine(Directory, FileName);
+        File.WriteAllText(path, JsonSerializer.Serialize(this, SaveOptions) + "\n");
+        BankPaths.RestrictFile(path);
+    }
+
     public static BankConfig Load(string directory)
     {
         var path = Path.Combine(directory, FileName);
         if (!File.Exists(path))
         {
-            throw new BankingConfigurationException($"No configuration at {path}. See docs/setup.md.");
+            throw new BankingConfigurationException($"No configuration at {path}. Run 'bank setup' to create it.");
         }
 
         try

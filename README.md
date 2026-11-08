@@ -8,6 +8,7 @@ Archive and export your own bank transactions using
 - **Activout.Banking.Cli** is a .NET tool that installs the `bank` command.
 
 ```sh
+bank setup                                                          # once: key, Enable Banking application
 bank connect personal --bank SEB --country SE --psu-type personal   # BankID in the browser
 bank account alias personal:1 salary
 bank sync --all
