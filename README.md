@@ -24,7 +24,14 @@ archive, so they work offline. Exports are your own archive, not official bank s
 
 ## Download
 
-Get the file for your computer from the [latest release](https://github.com/activout/Activout.Banking/releases/latest). It is a single
+On a Mac (M1 or newer) or Linux with [Homebrew](https://brew.sh), install and update it with:
+
+```sh
+brew install activout/tap/bank
+brew upgrade bank
+```
+
+Otherwise, get the file for your computer from the [latest release](https://github.com/activout/Activout.Banking/releases/latest). It is a single
 program with nothing else to install. The files are not code signed yet, so your computer warns you the first time.
 
 - **Windows:** download `bank-win-x64.exe`, rename it to `bank.exe` and open PowerShell in that folder. If Windows
