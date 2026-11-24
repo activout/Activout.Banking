@@ -23,8 +23,9 @@ public class CallbackListenerTests
         var received = listener.Receive(callback, uri => uri, CancellationToken.None);
 
         using var http = new HttpClient();
-        var favicon = await http.GetAsync($"http://127.0.0.1:{port}/favicon.ico");
-        var response = await http.GetAsync($"http://127.0.0.1:{port}/callback?state=s&code=c");
+        var favicon = await http.GetAsync($"http://127.0.0.1:{port}/favicon.ico", TestContext.Current.CancellationToken);
+        var response = await http.GetAsync($"http://127.0.0.1:{port}/callback?state=s&code=c",
+            TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, favicon.StatusCode);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -52,10 +53,11 @@ public class CallbackListenerTests
                 // Only this test trusts the self-signed certificate, by exact thumbprint.
                 ServerCertificateCustomValidationCallback = (_, cert, _, _) => cert?.Thumbprint == certificate.Thumbprint,
             });
-            var response = await http.GetAsync($"https://localhost:{port}/callback?state=x");
+            var response = await http.GetAsync($"https://localhost:{port}/callback?state=x",
+                TestContext.Current.CancellationToken);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Contains("state mismatch", await response.Content.ReadAsStringAsync());
+            Assert.Contains("state mismatch", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
             await Assert.ThrowsAsync<AuthorisationException>(() => received);
         }
         finally

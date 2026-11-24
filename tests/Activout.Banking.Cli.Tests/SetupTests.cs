@@ -43,13 +43,13 @@ public class SetupTests : IDisposable
     public async Task RunningAgainKeepsTheKeyAndAsksNothing()
     {
         await Bank("", "setup", "--application-id", Id);
-        var keyBefore = await File.ReadAllTextAsync(Path.Combine(_dir, "signing-key.pem"));
+        var keyBefore = await File.ReadAllTextAsync(Path.Combine(_dir, "signing-key.pem"), TestContext.Current.CancellationToken);
 
         var (exitCode, stdout, stderr) = await Bank("", "setup", "--json");
 
         Assert.Equal(0, exitCode);
         Assert.DoesNotContain("Paste the application ID", stderr);
-        Assert.Equal(keyBefore, await File.ReadAllTextAsync(Path.Combine(_dir, "signing-key.pem")));
+        Assert.Equal(keyBefore, await File.ReadAllTextAsync(Path.Combine(_dir, "signing-key.pem"), TestContext.Current.CancellationToken));
         Assert.Contains("\"created\": []", stdout);
     }
 
